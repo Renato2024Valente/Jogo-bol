@@ -1,0 +1,180 @@
+let ball;
+let paddle;
+let bricks = [];
+let points = 0;
+let gameover = false;
+
+function setup() {
+  createCanvas(400, 400);
+  ball = new Ball();
+  paddle = new Paddle();
+
+  // Cria tijolos
+  const brickWidth = 40;
+  const brickHeight = 20;
+  const totalRows = 5;
+  const totalCols = width / brickWidth;
+
+  for (let i = 0; i < totalRows; i++) {
+    for (let j = 0; j < totalCols; j++) {
+      bricks.push(new Brick(j * brickWidth, i * brickHeight, brickWidth, brickHeight));
+    }
+  }
+}
+
+function draw() {
+  background(0, 0, 255); // Muda o fundo para azul
+
+  if (!gameover) {
+    ball.move();
+    ball.display();
+
+    paddle.update();
+    paddle.display();
+    paddle.checkCollision(ball);
+
+    // Atualiza e exibe tijolos
+    for (let brick of bricks) {
+      brick.display();
+      brick.checkCollision(ball);
+    }
+
+    // Exibe a contagem de pontos
+    textSize(16);
+    textAlign(LEFT, TOP);
+    fill(255, 255, 255);
+    text(`Points: ${points}`, 10, 10);
+
+    // Verifica se a bola atingiu a parte inferior sem colidir com a raquete
+    if (ball.y + ball.radius >= height && !paddle.checkCollision(ball)) {
+      gameover = true;
+      textSize(32);
+      textAlign(CENTER, CENTER);
+      fill(255, 255, 255);
+      text(`Game Over! Points: ${points}`, width / 2, height / 2 + 30);
+    }
+
+    // Verifica se todos os tijolos foram removidos
+    let delayFrames = 120;
+    if (bricks.length === 0) {
+      gameover = true;
+      textSize(32);
+      textAlign(CENTER, CENTER);
+      fill(255, 255, 255);
+      text(`Você Ganhou parabens! Points: ${points}`, width / 2, height / 2 + 30);
+    }
+
+    // Verifica se todos os tijolos foram removidos
+    
+    if (bricks.length === 0) {
+      gameover = true;
+      textSize(32);
+      textAlign(CENTER, CENTER);
+      fill(255, 255, 255);
+      let delayFrames = 360;
+      text(`Você perdeu Playboy ! Points: ${points}`, width / 2, height / 2 + 30);
+    }
+  }
+}
+
+class Ball {
+  constructor() {
+    this.x = width / 2;
+    this.y = height / 2;
+    this.radius = 20;
+    this.speedX = 5;
+    this.speedY = 5;
+    this.color = color(random(255), random(255), random(255));
+  }
+
+  move() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+
+    // Verifica colisão com as bordas horizontais
+    if (this.y + this.radius >= height || this.y - this.radius <= 0) {
+      this.speedY = -this.speedY;
+    }
+
+    // Verifica colisão com as bordas verticais
+    if (this.x + this.radius >= width || this.x - this.radius <= 0) {
+      this.speedX = -this.speedX;
+    }
+  }
+
+  display() {
+    fill(this.color);
+    ellipse(this.x, this.y, this.radius * 2, this.radius * 2);
+  }
+}
+
+class Paddle {
+  constructor() {
+    this.width = 80;
+    this.height = 10;
+    this.x = width / 2 - this.width / 2;
+    this.y = height - 20;
+  }
+
+  update() {
+    // Atualiza a posição da raquete com base na posição do mouse
+    this.x = mouseX - this.width / 2;
+    // Limita a raquete para não ultrapassar as bordas horizontais
+    this.x = constrain(this.x, 0, width - this.width);
+  }
+
+  display() {
+    fill(255, 255, 255);
+    rect(this.x, this.y, this.width, this.height);
+  }
+
+  checkCollision(ball) {
+    // Verifica colisão com a raquete (paddle)
+    if (
+      ball.x + ball.radius >= this.x &&
+      ball.x - ball.radius <= this.x + this.width &&
+      ball.y + ball.radius >= this.y &&
+      ball.y - ball.radius <= this.y + this.height
+    ) {
+      ball.speedY = -ball.speedY;
+      points += 10; // Aumenta os pontos quando a bola atinge a raquete
+
+      // Muda a cor aleatoriamente
+      ball.color = color(random(255), random(255), random(255));
+    }
+  }
+}
+
+class Brick {
+  constructor(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.color = color(255, 165, 0); // Muda a cor dos tijolos para laranja
+  }
+
+  display() {
+    fill(this.color);
+    rect(this.x, this.y, this.width, this.height);
+  }
+
+  checkCollision(ball) {
+    // Verifica colisão com o tijolo
+    if (
+      ball.x + ball.radius >= this.x &&
+      ball.x - ball.radius <= this.x + this.width &&
+      ball.y + ball.radius >= this.y &&
+      ball.y - ball.radius <= this.y + this.height
+    ) {
+      // Remove o tijolo da lista quando colide com a bola
+      let index = bricks.indexOf(this);
+      bricks.splice(index, 1);
+      ball.speedY = -ball.speedY;
+      points += 20; // Aumenta os pontos quando a bola atinge um tijolo
+
+      // Muda a cor aleatoriamente
+      this.color = color(random(255), random(255), random(255));
+    }
+  }
+}
